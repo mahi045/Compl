@@ -534,7 +534,7 @@ Cmodels::preprocessing(bool& emptyprogram)
 			program.copyclauses.push_back(cl);
 			cl->finishClause();
 			// cl->print();
-			program.len_of_copy_operation += 1
+			program.len_of_copy_operation += 1;
 			program.size_of_copy+=1;
 
 			program.copyclauses.push_back(cl2);
