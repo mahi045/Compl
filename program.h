@@ -50,9 +50,12 @@ public:
 
   queue <Atom*>q; 
   vector<Atom*>atoms; 
-  unordered_map<int, Atom*>copy_set1; 
-  unordered_map<int, Atom*>copy_set2; 
-  unordered_map<int, Atom*>extra; 
+  unordered_map<int, Atom*>copy_var; 
+  unordered_map<int, Atom*>f_var; 
+  unordered_map<int, Atom*>g_var; 
+  vector<Atom*>c_var;
+  // unordered_map<int, Atom*>copy_set2; 
+  // unordered_map<int, Atom*>extra; 
 
 
   list<Rule*> rules;

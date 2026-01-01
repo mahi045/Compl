@@ -442,29 +442,54 @@ Cmodels::preprocessing(bool& emptyprogram)
 	if((itrmm)->inLoop!=-1){
 		nLoopAtoms += 1;
 		// creating two set of copy variables
-		program.copy_set1[(itrmm)->id] = api->new_atom();
-		// cout << "Atom " << (itrmm)->id << " copy atom: " << program.copy_set1[(itrmm)->id]->id << endl;
-		program.copy_set2[(itrmm)->id] = api->new_atom();
-		program.extra[(itrmm)->id] = api->new_atom();
-		// adding the type-1 implications
-		Clause* cl = new Clause();
-		cl->allocateClause(1,1);
-		cl->addNbody(0, program.copy_set1[(itrmm)->id]);
-		cl->addPbody(0, (itrmm));
-		Clause* cl2 = new Clause();
-		cl2->allocateClause(1,1);
-		cl2->addNbody(0, program.copy_set2[(itrmm)->id]);
-		cl2->addPbody(0, (itrmm));
-		// cout << -program.copy_set1[(itrmm)->id]->id << " " << (itrmm)->id << " 0" << endl;
-
+		program.copy_var[(itrmm)->id] = api->new_atom();
+		// cout << "Atom " << (itrmm)->id << " copy atom: " << program.copy_var[(itrmm)->id]->id << endl;
+		program.g_var[(itrmm)->id] = api->new_atom();
+		program.f_var[(itrmm)->id] = api->new_atom();
+		
+		// adding -f_i or x_i' clause
+		Clause* cl1 = new Clause();
+		cl1->allocateClause(1,1); // -f_i or x_i'
+		cl1->addPbody(0, program.copy_var[(itrmm)->id]);
+		cl1->addNbody(0, program.f_var[(itrmm)->id]);
+		program.copyclauses.push_back(cl1);
 		program.size_of_copy++;
-		program.copyclauses.push_back(cl);
-		cl->finishClause();
+		cl1->finishClause();
+
+		// adding -f_i or -x_i clause
+		Clause* cl2 = new Clause();
+		cl2->allocateClause(2,0);
+		cl2->addNbody(0, itrmm); // -f_i or -x_i
+		cl2->addNbody(1, program.f_var[(itrmm)->id]);
+		program.copyclauses.push_back(cl2);
+		program.size_of_copy++;
+		cl2->finishClause();
+		// cout << -program.copy_var[(itrmm)->id]->id << " " << (itrmm)->id << " 0" << endl;
+
+		// adding -g_i or -x_i or x_i' clause
+		Clause* cl3 = new Clause();
+		cl3->allocateClause(2,1);
+		cl3->addNbody(0, itrmm); 
+		cl3->addNbody(1, program.g_var[(itrmm)->id]);
+		cl3->addPbody(0, program.copy_var[(itrmm)->id]);
+		program.copyclauses.push_back(cl3);
+		program.size_of_copy++;
+		cl3->finishClause();
+
+		// adding -g_i or x_i clause
+		// Clause* cl4 = new Clause();
+		// cl4->allocateClause(1,1);
+		// cl4->addPbody(0, itrmm); 
+		// cl4->addNbody(0, program.g_var[(itrmm)->id]);
+		// program.copyclauses.push_back(cl4);
+		// program.size_of_copy++;
+		// cl4->finishClause();
+
 		// cl->print();
 
-		program.size_of_copy++;
-		program.copyclauses.push_back(cl2);
-		cl2->finishClause();
+		// program.size_of_copy++;
+		// program.copyclauses.push_back(cl2);
+		// cl2->finishClause();
 		// cl2->print();
 	}
   }
@@ -489,110 +514,90 @@ Cmodels::preprocessing(bool& emptyprogram)
 		// }
 		if (involved) {
 			cr->bodyInCopy = true;
-			Clause* cl = new Clause();
-			Clause* cl2 = new Clause();
+			// create a new c_i variable 
+			program.c_var.push_back(api->new_atom());
+			// Clause* cl = new Clause();
+			// Clause* cl2 = new Clause();
 			int nbody = 0, nindex = 0;
 			int pbody = 0, pindex = 0;
 			for (Atom **a = cr->head; a != cr->hend; a++) pbody++;
 			for (Atom **a = cr->pbody; a != cr->nnend; a++) nbody++;
 			for (Atom **a = cr->nbody; a != cr->nend; a++) pbody++;
 			program.size_of_copy_operation += (nbody + pbody);
-			cl->allocateClause(nbody, pbody);
-			cl2->allocateClause(nbody, pbody);
 			for (Atom **a = cr->head; a != cr->hend; a++){
+				// adding clause -c_i or -h
+				Clause* cl = new Clause();
+				cl->allocateClause(2,0);
+				cl->addNbody(0, program.c_var.back());
 				if((*a)->inLoop != -1) { 
-					cl->addPbody(pindex, program.copy_set1[(*a)->id]);
-					cl2->addPbody(pindex, program.copy_set2[(*a)->id]);
-					// cout << program.copy_set1[(*a)->id]->id << " ";
-					// pindex++;
+					cl->addNbody(1, program.copy_var[(*a)->id]);
+				} else { 
+					cl->addNbody(1, *a);
 				}
-				else { 
-					cl->addPbody(pindex, *a);
-					cl2->addPbody(pindex, *a);
-				}
-				pindex++;
+				program.copyclauses.push_back(cl);
+				cl->finishClause();
+				program.size_of_copy += 1;
 			}
 			for (Atom **a = cr->pbody; a != cr->nnend; a++) {
+				// adding clause -c_i or pos_body
+				Clause* cl = new Clause();
+				cl->allocateClause(1,1);
+				cl->addNbody(0, program.c_var.back());
 				if((*a)->inLoop != -1) { 
-					cl->addNbody(nindex, program.copy_set1[(*a)->id]);
-					cl2->addNbody(nindex, program.copy_set2[(*a)->id]);
-					// cout << -program.copy_set1[(*a)->id]->id << " ";
+					cl->addPbody(0, program.copy_var[(*a)->id]);
+				} else { 
+					cl->addPbody(0, *a);
 				}
-				else { 
-					cl->addNbody(nindex, *a);
-					cl2->addNbody(nindex, *a);
-					// cout << -(*a)->id << " ";
-				}
-				nindex++;
+				program.copyclauses.push_back(cl);
+				cl->finishClause();
+				program.size_of_copy += 1;
 			}
 			for (Atom **a = cr->nbody; a != cr->nend; a++) {
-				cl->addPbody(pindex, *a);
-				cl2->addPbody(pindex, *a);
-				pindex++;
+				// adding clause -c_i or neg_body
+				Clause* cl = new Clause();
+				cl->allocateClause(2,0);
+				cl->addNbody(0, program.c_var.back());
+				cl->addNbody(1, *a);
+				program.copyclauses.push_back(cl);
+				cl->finishClause();
+				program.size_of_copy += 1;
 				// cout << (*a)->id << " ";
 			}
-			program.copyclauses.push_back(cl);
-			cl->finishClause();
-			// cl->print();
-			program.len_of_copy_operation += 1;
-			program.size_of_copy+=1;
+			// program.copyclauses.push_back(cl);
+			// cl->finishClause();
+			// // cl->print();
+			// program.len_of_copy_operation += 1;
+			// program.size_of_copy+=1;
 
-			program.copyclauses.push_back(cl2);
-			cl2->finishClause();
-			program.size_of_copy+=1;
+			// program.copyclauses.push_back(cl2);
+			// cl2->finishClause();
+			// program.size_of_copy+=1;
 			// cout << "0" << endl;
 		}
   	}
   }
   Clause* cl = new Clause();
   int i = 0;
-  cl->allocateClause(0,program.extra.size());
+  cl->allocateClause(0, program.c_var.size() + program.g_var.size() + program.f_var.size());
   for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
     Atom* itrmm = program.atoms[indA];
 	if((itrmm)->inLoop!=-1){
 		// creating two set of copy variables
-		Clause* cl1 = new Clause();
-		cl1->allocateClause(1, 1);
-		cl1->addNbody(0, program.copy_set1[(itrmm)->id]);
-		cl1->addPbody(0, program.copy_set2[(itrmm)->id]);
-		program.copyclauses.push_back(cl1);
-		cl1->finishClause();
-		program.size_of_copy+=1;
-
-		Clause* cl2 = new Clause();
-		cl2->allocateClause(1, 2);
-		cl2->addNbody(0, program.copy_set2[(itrmm)->id]);
-		cl2->addPbody(0, program.copy_set1[(itrmm)->id]);
-		cl2->addPbody(1, program.extra[(itrmm)->id]);
-		program.copyclauses.push_back(cl2);
-		cl2->finishClause();
-		program.size_of_copy+=1;
-
-		Clause* cl3 = new Clause();
-		cl3->allocateClause(1, 1);
-		cl3->addNbody(0, program.extra[(itrmm)->id]);
-		cl3->addPbody(0, program.copy_set2[(itrmm)->id]);
-		program.copyclauses.push_back(cl3);
-		cl3->finishClause();
-		program.size_of_copy+=1;
-
-		Clause* cl4 = new Clause();
-		cl4->allocateClause(2, 0);
-		cl4->addNbody(0, program.extra[(itrmm)->id]);
-		cl4->addNbody(1, program.copy_set1[(itrmm)->id]);
-		program.copyclauses.push_back(cl4);
-		cl4->finishClause();
-		program.size_of_copy+=1;
-
-		cl->addPbody(i, program.extra[(itrmm)->id]);
+		cl->addPbody(i, program.f_var[(itrmm)->id]);
+		i++;
+		cl->addPbody(i, program.g_var[(itrmm)->id]);
 		i++;
 	}
   }
-  if (program.extra.size() > 0) {
+  for (Atom* atom: program.c_var) {
+	cl->addPbody(i, atom);
+	i++;
+  }
+//   if (program.extra.size() > 0) {
 	program.copyclauses.push_back(cl);
 	cl->finishClause();
 	program.size_of_copy+=1;
-  }
+//   }
   if (nLoopAtoms == 0) {
 	// tight program
 	Clause* cl1 = new Clause();
@@ -609,8 +614,9 @@ Cmodels::preprocessing(bool& emptyprogram)
 	program.copyclauses.push_back(cl2);
 	program.size_of_copy+=1;
   }
-  cout << "The number of literals in copy operation: " << program.size_of_copy_operation << endl;
-  cout << "The length in copy operation: " << program.len_of_copy_operation << endl;
+  cout << "The #clauses due to Clark Completion: " << program.clauses.size() << endl;
+  cout << "The #variables due to Copy operation: " << program.c_var.size() + program.g_var.size() + program.f_var.size() << endl;
+  cout << "The #clauses due to Copy operation: " << program.size_of_copy << endl;
   //we allocate the managers for Zchaff/Minisat/Minisat1 here
   switch(param.sys){
 	case ZCHAFF:{
@@ -815,7 +821,7 @@ Cmodels::eraseFalseAtomsFromClauses(){
 inline void
 Cmodels::clean(){
   if(!param.keep&&param.sys!=DIMACS_PRODUCE&&param.sys!=CASP_DIMACS_PRODUCE){
-	unlink(param.completionFileName);
+	unlink(param.qcnfFileName);
 	unlink(param.solverOutputFileName);
   }
 }
@@ -2201,16 +2207,16 @@ Cmodels::print_output_for_sat(){
 void 
 Cmodels::print_DIMACS(){
   //creates cnf standard file for all sat solvers
-  unlink(param.completionFileName);
-  FILE* file_c = fopen (param.completionFileName, "w");
-  FILE* file_n = fopen (param.nonsmFileName, "w");
+  unlink(param.qcnfFileName);
+  FILE* file_q = fopen (param.qcnfFileName, "w");
+//   FILE* file_n = fopen (param.nonsmFileName, "w");
   
-  if(file_c){
+  if(file_q){
     switch(param.sys){
     case  CASP_DIMACS_PRODUCE: 
-      fprintf(file_c, "smt cnf %d %d\n",program.number_of_atoms_in_completion, program.number_of_clauses); 
+      fprintf(file_q, "smt cnf %d %d\n",program.number_of_atoms_in_completion, program.number_of_clauses); 
       for(long indA=0; indA<program.clauses.size(); indA++){
-	program.clauses[indA]->printsmtcnf(file_c);
+	program.clauses[indA]->printsmtcnf(file_q);
       }
       cout<<"---------"<<endl;
       //  for(long indA=0; indA<program.atoms.size(); indA++){
@@ -2218,30 +2224,54 @@ Cmodels::print_DIMACS(){
       //}
       break;
     default:
-      fprintf(file_c, "p cnf %d %d\n",program.number_of_atoms_in_completion, program.number_of_clauses); 
-      for(long indA=0; indA<program.clauses.size(); indA++){
-	program.clauses[indA]->printcnf(file_c);
-	    }
+    //   fprintf(file_q, "p cnf %d %d\n",program.number_of_atoms_in_completion, program.number_of_clauses); 
+    //   for(long indA=0; indA<program.clauses.size(); indA++){
+	// 	program.clauses[indA]->printcnf(file_c);
+	// 	}
 		// now writing down the input file for non answer sets. 
-		std::string proj_str = "c ind ";
+		// first quantifier level (exists quantifier)
+		std::string first_quan_level = "e "; 
 		// Loop from 1 to 5
 		for (int i = 1; i <= program.number_of_atoms_in_completion; ++i) {
 			// each of variable is part of independent support
-			proj_str += std::to_string(i) + " ";
+			first_quan_level += std::to_string(i) + " ";
 		}
-		proj_str += "0\n";
-	  fprintf(file_n, "p cnf %d %d\n",program.number_of_atoms, program.number_of_clauses + program.size_of_copy); 
-      fprintf(file_n, proj_str.c_str());
+		first_quan_level += "0\n";
+
+		// second quantifier level (forall quantifier)
+		std::string second_quan_level = "a ";
+		for (const auto& [k, v] : program.copy_var) {
+    		second_quan_level += std::to_string(v->id) + " "; 
+  		}
+		second_quan_level += "0\n";
+
+		// second quantifier level (forall quantifier)
+		std::string third_quan_level = "e ";
+		for (const auto& [k, v] : program.f_var) {
+    		third_quan_level += std::to_string(v->id) + " "; 
+  		}
+		for (const auto& [k, v] : program.g_var) {
+    		third_quan_level += std::to_string(v->id) + " "; 
+  		}
+		for (Atom* atom: program.c_var) {
+			third_quan_level += std::to_string(atom->id) + " "; 
+  		}
+		third_quan_level += "0\n";
+
+	  fprintf(file_q, "p cnf %d %d\n",program.number_of_atoms, program.number_of_clauses + program.size_of_copy); 
+      fprintf(file_q, first_quan_level.c_str()); // printing first quantifier variables
+	  fprintf(file_q, second_quan_level.c_str()); // printing second quantifier variables
+	  fprintf(file_q, third_quan_level.c_str()); // printing third quantifier variables
 	  for(long indA=0; indA<program.clauses.size(); indA++){
-	program.clauses[indA]->printcnf(file_n);
+			program.clauses[indA]->printcnf(file_q);
 	    }
 		for(long indA=0; indA<program.copyclauses.size(); indA++){
-	program.copyclauses[indA]->printcnf(file_n);
+			program.copyclauses[indA]->printcnf(file_q);
 	    }
     }
   }
   else {
-    cerr<<"Cmodels: Error while opening file "<<param.completionFileName;
+    cerr<<"Cmodels: Error while opening file "<<param.qcnfFileName;
     exit(20);
   }
   //clean memory from clauses that will no longer be of use
@@ -2259,8 +2289,7 @@ Cmodels::print_DIMACS(){
     program.copyclauses.clear();
   }
   
-  fclose(file_c);
-  fclose(file_n);
+  fclose(file_q);
   
 }
 
@@ -2270,8 +2299,8 @@ Cmodels::print_output_for_BCircuit(){
 
   char gateName[256];
 
-  unlink(param.completionFileName);
-  FILE* file = fopen (param.completionFileName, "w"); 
+  unlink(param.qcnfFileName);
+  FILE* file = fopen (param.qcnfFileName, "w"); 
 
   if(file){
 	fprintf(file, "BC1.0\n");
@@ -2819,7 +2848,7 @@ Cmodels::call_simo()
   if (!program.basic && param.many!=1)
     erase=false;
 
-  loadFormula(param.completionFileName,erase,param.hf,ScopeOfNegAsFailure,param.heur);
+  loadFormula(param.qcnfFileName,erase,param.hf,ScopeOfNegAsFailure,param.heur);
   Result interpretation;
   while(true){
 	interpretation= SingleSolve();
@@ -3292,8 +3321,8 @@ Cmodels::setupFilenames(){
   /* initialize random seed: */
   srand (time(NULL));
 
-  sprintf(param.completionFileName,"%s%s%s","model_",param.dirName,".out");
-  sprintf(param.nonsmFileName,"%s%s%s","non_sm_",param.dirName,".out");
+  sprintf(param.qcnfFileName,"%s%s%s","qcnf_",param.dirName,".qcnf");
+//   sprintf(param.nonsmFileName,"%s%s%s","non_sm_",param.dirName,".out");
   sprintf(param.solverOutputFileName,"%s%s%d%s",param.dirName,"solver-solution", rand(),".out" "%s%s",param.dirName);
 	  
   FILE* fconfig = NULL;
@@ -3409,11 +3438,11 @@ Cmodels::setupFilenames(){
   if(param.sys == RELSAT){
 	char s[1024];
 	if(!program.tight)
-	  sprintf(s,"%s -#%d %s > %s ",relsat_loc,1   ,param.completionFileName,param.solverOutputFileName);
+	  sprintf(s,"%s -#%d %s > %s ",relsat_loc,1   ,param.qcnfFileName,param.solverOutputFileName);
 	else if(param.many!=0)
-	  sprintf(s,"%s -#%d %s > %s ",relsat_loc,param.many,param.completionFileName,param.solverOutputFileName);
+	  sprintf(s,"%s -#%d %s > %s ",relsat_loc,param.many,param.qcnfFileName,param.solverOutputFileName);
 	else 
-	  sprintf(s,"%s -#a %s > %s ",relsat_loc,param.completionFileName,param.solverOutputFileName);
+	  sprintf(s,"%s -#a %s > %s ",relsat_loc,param.qcnfFileName,param.solverOutputFileName);
 	strcpy(command,s);
 
 
@@ -3421,7 +3450,7 @@ Cmodels::setupFilenames(){
   //command line for ASSAT_ZCHAFF
   if(param.sys == ASSAT_ZCHAFF){
 	char s[1024];
-	sprintf(s,"%s %s > %s ",zchaff_loc,param.completionFileName,param.solverOutputFileName);
+	sprintf(s,"%s %s > %s ",zchaff_loc,param.qcnfFileName,param.solverOutputFileName);
 	strcpy(command,s);
 
   }
@@ -3429,7 +3458,7 @@ Cmodels::setupFilenames(){
   //command line for BCircuit
   if(param.sys == BCIRCUIT){
 	char s[1024];
-	sprintf(s,"%s %s > %s",bcircuit_loc, param.completionFileName, param.solverOutputFileName);
+	sprintf(s,"%s %s > %s",bcircuit_loc, param.qcnfFileName, param.solverOutputFileName);
 	strcpy(command,s);
   }
   
