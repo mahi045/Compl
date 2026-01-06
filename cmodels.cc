@@ -206,8 +206,7 @@ Cmodels::Cmodels ()
   
   output.program = &program;
   output.param = &param;
-
-  
+  atomNameMap=map<string, int>();  
   satMngMinimality =0;
   zchaffMng =0;
 	
@@ -439,11 +438,13 @@ Cmodels::preprocessing(bool& emptyprogram)
   program.number_of_atoms_in_completion = program.atoms.size();
   for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
     Atom* itrmm = program.atoms[indA];
+		atomNameMap[std::string(itrmm->atom_name())] = itrmm->id;
+//		std::cout << "Atom " << indA << " "<< itrmm->atom_name() << std::endl;
 	if((itrmm)->inLoop!=-1){
 		nLoopAtoms += 1;
 		// creating two set of copy variables
 		program.copy_var[(itrmm)->id] = api->new_atom();
-		// cout << "Atom " << (itrmm)->id << " copy atom: " << program.copy_var[(itrmm)->id]->id << endl;
+		// cout << 227" << (itrmm)->id << " copy atom: " << program.copy_var[(itrmm)->id]->id << endl;
 		program.g_var[(itrmm)->id] = api->new_atom();
 		program.f_var[(itrmm)->id] = api->new_atom();
 		
@@ -2209,6 +2210,8 @@ Cmodels::print_DIMACS(){
   //creates cnf standard file for all sat solvers
   unlink(param.qcnfFileName);
   FILE* file_q = fopen (param.qcnfFileName, "w");
+	// weights file
+
 //   FILE* file_n = fopen (param.nonsmFileName, "w");
   
   if(file_q){
@@ -2262,6 +2265,17 @@ Cmodels::print_DIMACS(){
       fprintf(file_q, first_quan_level.c_str()); // printing first quantifier variables
 	  fprintf(file_q, second_quan_level.c_str()); // printing second quantifier variables
 	  fprintf(file_q, third_quan_level.c_str()); // printing third quantifier variables
+
+		std::string weight_file = param.qcnfFileName;
+		weight_file=weight_file+".weights";
+		std::cout<<"Weights file: "<<weight_file<<std::endl;
+    std::ifstream infile(weight_file);
+    std::string atomname;
+    double weight;
+		while(infile >> atomname >> weight){
+			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomNameMap[atomname]<<std::endl;
+			fprintf(file_q, "c p weight %d %f\n", atomNameMap[atomname], weight);
+		}
 	  for(long indA=0; indA<program.clauses.size(); indA++){
 			program.clauses[indA]->printcnf(file_q);
 	    }

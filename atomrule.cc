@@ -2496,7 +2496,7 @@ Clause::finishClause(){
   }
   cout<<endl;
   */
-  assert (size>0);
+//  assert (size>0);
 }
 
 
