@@ -2233,6 +2233,8 @@ Cmodels::print_DIMACS(){
 	// 	}
 		// now writing down the input file for non answer sets. 
 		// first quantifier level (exists quantifier)
+		if (!program.tight)
+		{
 		std::string first_quan_level = "e "; 
 		// Loop from 1 to 5
 		for (int i = 1; i <= program.number_of_atoms_in_completion; ++i) {
@@ -2260,28 +2262,47 @@ Cmodels::print_DIMACS(){
 			third_quan_level += std::to_string(atom->id) + " "; 
   		}
 		third_quan_level += "0\n";
-
+		
 	  fprintf(file_q, "p cnf %d %d\n",program.number_of_atoms, program.number_of_clauses + program.size_of_copy); 
       fprintf(file_q, first_quan_level.c_str()); // printing first quantifier variables
 	  fprintf(file_q, second_quan_level.c_str()); // printing second quantifier variables
 	  fprintf(file_q, third_quan_level.c_str()); // printing third quantifier variables
+		}
+		else
+		{
+			  fprintf(file_q, "p cnf %d %d\n",program.number_of_atoms, program.number_of_clauses); 
+  	}
+		
+
 
 		std::string weight_file = param.qcnfFileName;
 		weight_file=weight_file+".weights";
 		std::cout<<"Weights file: "<<weight_file<<std::endl;
-    std::ifstream infile(weight_file);
+    std::ifstream infile(weight_file, std::ios::in);
+		std::string weight_file_D4=param.qcnfFileName;
+		weight_file_D4=weight_file_D4+".d4.weights";
+		std::string proj_file_D4=param.qcnfFileName;
+		proj_file_D4=proj_file_D4+".d4.projection";
+		std::ofstream weightD4(weight_file_D4);
+		std::ofstream projD4(proj_file_D4);
+
     std::string atomname;
     double weight;
 		while(infile >> atomname >> weight){
-			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomNameMap[atomname]<<std::endl;
-			fprintf(file_q, "c p weight %d %f\n", atomNameMap[atomname], weight);
+			int atomId=atomNameMap[atomname];
+			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomId<<std::endl;
+			fprintf(file_q, "c p weight %d %f\n", atomId, weight);
+			weightD4<< atomId <<" "<< weight <<std::endl;
+			projD4<< atomId <<" ";
 		}
+		projD4<< std::endl;
 	  for(long indA=0; indA<program.clauses.size(); indA++){
 			program.clauses[indA]->printcnf(file_q);
 	    }
-		for(long indA=0; indA<program.copyclauses.size(); indA++){
-			program.copyclauses[indA]->printcnf(file_q);
-	    }
+		if (!program.tight)
+			for(long indA=0; indA<program.copyclauses.size(); indA++){
+				program.copyclauses[indA]->printcnf(file_q);
+	    	}
     }
   }
   else {
