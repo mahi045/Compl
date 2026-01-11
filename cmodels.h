@@ -39,7 +39,7 @@ public:
   Output output;
   Param param; //contains all the fields with parameters
                //that may be initialized at command line
-
+  map<string, int> atomNameMap;
 
   Api *api;
   
