@@ -44,6 +44,7 @@ public:
   void print_completion ();   
   void print_clauses ();
   void print_atoms ();
+  void print_atoms_dimac (FILE* file);
   void print_atoms_wf ();
 
 

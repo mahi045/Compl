@@ -229,6 +229,14 @@ Atom::print(){
   cout<<":hof "<<headof;
 }
 
+void Atom::print_dimac(FILE* file){
+  if(strcmp("#noname#",atom_name()))
+    fprintf(file, "c %s %d %d \n", atom_name(), id, original_id);
+	// cout << "c " << atom_name ()<<":"<<id<<":"<<original_id << endl;
+  // else cout << id<<":"<<original_id;
+  return;
+}
+
 void
 Atom::printBCircuit(FILE* file){  
   if(strcmp("#noname#",atom_name()))

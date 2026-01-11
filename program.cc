@@ -128,6 +128,19 @@ Program::print_atoms(){
   cout<<endl;
   
 }
+
+void
+Program::print_atoms_dimac(FILE* file){
+  // cout <<"ATOMS OF A PROGRAM"<<endl;
+  long size=0;
+  for (vector<Atom*>::iterator itrCl =  atoms.begin();
+	   itrCl !=  atoms.end(); itrCl++){
+	size++;
+	(*itrCl)->print_dimac(file);
+  }
+  cout<<endl;
+  
+}
 void
 Program::print_atoms_wf(){
   cout <<"WF ATOMS OF A PROGRAM"<<endl;
