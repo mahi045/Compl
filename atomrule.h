@@ -133,6 +133,7 @@ public:
 
 
   void print();
+  void print_dimac(FILE* file);
   void printClean(FILE * =stdout);
   void printRules(); 
   void printNestedRules();

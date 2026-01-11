@@ -2276,6 +2276,7 @@ Cmodels::print_DIMACS(){
       fprintf(file_q, first_quan_level.c_str()); // printing first quantifier variables
 	  fprintf(file_q, second_quan_level.c_str()); // printing second quantifier variables
 	  fprintf(file_q, third_quan_level.c_str()); // printing third quantifier variables
+	  program.print_atoms_dimac(file_q);
 		}
 		else
 		{
