@@ -2233,6 +2233,15 @@ Cmodels::print_DIMACS(){
 	// 	}
 		// now writing down the input file for non answer sets. 
 		// first quantifier level (exists quantifier)
+		std::string idatoms_file = param.qcnfFileName;
+		idatoms_file=idatoms_file+".idatoms";
+		std::ofstream idatoms(idatoms_file);
+		for (long indA=0; indA<program.atoms.size(); indA++){
+			Atom* atom = program.atoms[indA];
+			idatoms << atom->id << " " << atom->name << std::endl;
+		}
+		idatoms.close();
+
 		if (!program.tight)
 		{
 		std::string first_quan_level = "e "; 
