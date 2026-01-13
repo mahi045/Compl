@@ -436,6 +436,7 @@ Cmodels::preprocessing(bool& emptyprogram)
   }
   int nLoopAtoms = 0;
   program.number_of_atoms_in_completion = program.atoms.size();
+  program.g_var = api->new_atom();
   for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
     Atom* itrmm = program.atoms[indA];
 		atomNameMap[std::string(itrmm->atom_name())] = itrmm->id;
@@ -445,8 +446,11 @@ Cmodels::preprocessing(bool& emptyprogram)
 		// creating two set of copy variables
 		program.copy_var[(itrmm)->id] = api->new_atom();
 		// cout << 227" << (itrmm)->id << " copy atom: " << program.copy_var[(itrmm)->id]->id << endl;
-		program.g_var[(itrmm)->id] = api->new_atom();
+		// cout << "loop atom: " << (itrmm)->id << " " << " copy var: " << program.copy_var[(itrmm)->id]->id << endl;
+		// program.g_var[(itrmm)->id] = api->new_atom();
+		// cout << "loop atom: " << (itrmm)->id << " " << " g var: " << program.g_var[(itrmm)->id]->id << endl;
 		program.f_var[(itrmm)->id] = api->new_atom();
+		// cout << "loop atom: " << (itrmm)->id << " " << " f var: " << program.f_var[(itrmm)->id]->id << endl;
 		
 		// adding -f_i or x_i' clause
 		Clause* cl1 = new Clause();
@@ -471,7 +475,7 @@ Cmodels::preprocessing(bool& emptyprogram)
 		Clause* cl3 = new Clause();
 		cl3->allocateClause(2,1);
 		cl3->addNbody(0, itrmm); 
-		cl3->addNbody(1, program.g_var[(itrmm)->id]);
+		cl3->addNbody(1, program.g_var);
 		cl3->addPbody(0, program.copy_var[(itrmm)->id]);
 		program.copyclauses.push_back(cl3);
 		program.size_of_copy++;
@@ -579,14 +583,14 @@ Cmodels::preprocessing(bool& emptyprogram)
   }
   Clause* cl = new Clause();
   int i = 0;
-  cl->allocateClause(0, program.c_var.size() + program.g_var.size() + program.f_var.size());
+  cl->allocateClause(0, program.c_var.size() + 1 + program.f_var.size());
+  cl->addPbody(i, program.g_var);
+  i++;
   for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
     Atom* itrmm = program.atoms[indA];
 	if((itrmm)->inLoop!=-1){
 		// creating two set of copy variables
 		cl->addPbody(i, program.f_var[(itrmm)->id]);
-		i++;
-		cl->addPbody(i, program.g_var[(itrmm)->id]);
 		i++;
 	}
   }
@@ -616,7 +620,7 @@ Cmodels::preprocessing(bool& emptyprogram)
 	program.size_of_copy+=1;
   }
   cout << "The #clauses due to Clark Completion: " << program.clauses.size() << endl;
-  cout << "The #variables due to Copy operation: " << program.c_var.size() + program.g_var.size() + program.f_var.size() << endl;
+  cout << "The #variables due to Copy operation: " << program.c_var.size() + 1 + program.f_var.size() << endl;
   cout << "The #clauses due to Copy operation: " << program.size_of_copy << endl;
   //we allocate the managers for Zchaff/Minisat/Minisat1 here
   switch(param.sys){
@@ -2264,9 +2268,10 @@ Cmodels::print_DIMACS(){
 		for (const auto& [k, v] : program.f_var) {
     		third_quan_level += std::to_string(v->id) + " "; 
   		}
-		for (const auto& [k, v] : program.g_var) {
-    		third_quan_level += std::to_string(v->id) + " "; 
-  		}
+		third_quan_level += std::to_string(program.g_var->id) + " "; 
+		// for (const auto& [k, v] : program.g_var) {
+    	// 	third_quan_level += std::to_string(v->id) + " "; 
+  		// }
 		for (Atom* atom: program.c_var) {
 			third_quan_level += std::to_string(atom->id) + " "; 
   		}
