@@ -2285,7 +2285,7 @@ Cmodels::print_DIMACS(){
 		}
 		else
 		{
-			  fprintf(file_q, "p cnf %d %d\n",program.number_of_atoms, program.number_of_clauses); 
+			  fprintf(file_q, "c t pwmc\np cnf %d %d\n",program.number_of_atoms, program.number_of_clauses); 
   	}
 		
 
@@ -2309,9 +2309,9 @@ Cmodels::print_DIMACS(){
 		while(infile >> atomname >> weight){
 			int atomId=atomNameMap[atomname];
 			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomId<<std::endl;
-			weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+"\n";
-			weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+"\n";
-			show+="c p show "+std::to_string(atomId)+"\n";
+			weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
+			weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+" 0\n";
+			show+="c p show "+std::to_string(atomId)+" 0\n";
 			//fprintf(file_q, "c p weight %d %f\n", atomId, weight);
 			//fprintf(file_q, "c p weight -%d %f\n", atomId, 1-weight);
 			//fprintf(file_q, "c p show %d\n", atomId);
