@@ -436,7 +436,14 @@ Cmodels::preprocessing(bool& emptyprogram)
   }
   int nLoopAtoms = 0;
   program.number_of_atoms_in_completion = program.atoms.size();
-  program.g_var = api->new_atom();
+  for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
+    Atom* itrmm = program.atoms[indA];
+	if((itrmm)->inLoop!=-1){
+		// there are cycles
+		program.g_var = api->new_atom();
+		break;
+	}
+  }
   for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
     Atom* itrmm = program.atoms[indA];
 		atomNameMap[std::string(itrmm->atom_name())] = itrmm->id;
@@ -581,28 +588,35 @@ Cmodels::preprocessing(bool& emptyprogram)
 		}
   	}
   }
-  Clause* cl = new Clause();
-  int i = 0;
-  cl->allocateClause(0, program.c_var.size() + 1 + program.f_var.size());
-  cl->addPbody(i, program.g_var);
-  i++;
-  for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
-    Atom* itrmm = program.atoms[indA];
-	if((itrmm)->inLoop!=-1){
-		// creating two set of copy variables
-		cl->addPbody(i, program.f_var[(itrmm)->id]);
-		i++;
-	}
+  if (nLoopAtoms > 0)
+  {
+	 // it is non tight program
+	  Clause *cl = new Clause();
+	  int i = 0;
+	  cl->allocateClause(0, program.c_var.size() + 1 + program.f_var.size());
+	  cl->addPbody(i, program.g_var);
+	  i++;
+	  for (long indA = 0; indA < program.number_of_atoms_in_completion; indA++)
+	  {
+		  Atom *itrmm = program.atoms[indA];
+		  if ((itrmm)->inLoop != -1)
+		  {
+			  // creating two set of copy variables
+			  cl->addPbody(i, program.f_var[(itrmm)->id]);
+			  i++;
+		  }
+	  }
+	  for (Atom *atom : program.c_var)
+	  {
+		  cl->addPbody(i, atom);
+		  i++;
+	  }
+	  //   if (program.extra.size() > 0) {
+	  program.copyclauses.push_back(cl);
+	  cl->finishClause();
+	  program.size_of_copy += 1;
+	  //   }
   }
-  for (Atom* atom: program.c_var) {
-	cl->addPbody(i, atom);
-	i++;
-  }
-//   if (program.extra.size() > 0) {
-	program.copyclauses.push_back(cl);
-	cl->finishClause();
-	program.size_of_copy+=1;
-//   }
   if (nLoopAtoms == 0) {
 	// tight program
 	Clause* cl1 = new Clause();
