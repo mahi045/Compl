@@ -2251,14 +2251,6 @@ Cmodels::print_DIMACS(){
 	// 	}
 		// now writing down the input file for non answer sets. 
 		// first quantifier level (exists quantifier)
-		std::string idatoms_file = param.qcnfFileName;
-		idatoms_file=idatoms_file+".idatoms";
-		std::ofstream idatoms(idatoms_file);
-		for (long indA=0; indA<program.atoms.size(); indA++){
-			Atom* atom = program.atoms[indA];
-			idatoms << atom->id << " " << atom->name << std::endl;
-		}
-		idatoms.close();
 
 		if (!program.tight)
 		{
@@ -2300,10 +2292,34 @@ Cmodels::print_DIMACS(){
 		else
 		{
 			  fprintf(file_q, "c t pwmc\np cnf %d %d\n",program.number_of_atoms, program.number_of_clauses); 
+  		  program.print_atoms_dimac(file_q);
   	}
 		
-
-
+		// std::string idatoms_file = param.qcnfFileName;
+		// idatoms_file=idatoms_file+".idatoms";
+		// std::ofstream idatoms(idatoms_file);
+		// for (long indA=0; indA<program.number_of_atoms; indA++){
+		// 	Atom* atom = program.atoms[indA];
+		// 	idatoms << atom->id << " " << atom->name << std::endl;
+		// }
+    // idatoms << "Copy vars" <<std::endl;
+		// for (const auto& [k, v] : program.copy_var) {
+    // 		idatoms <<std::to_string(v->id) + " " << v->name << std::endl;; 
+  	// 	}
+    // idatoms << "F vars" <<std::endl;
+		// for (const auto& [k, v] : program.f_var) {
+    // 		idatoms <<std::to_string(v->id) + " " << v->name << std::endl;; 
+  	// 	}
+    // idatoms << "G var" <<std::endl;
+		// idatoms << std::to_string(program.g_var->id) + " " << program.g_var->name << std::endl;; 
+		// // for (const auto& [k, v] : program.g_var) {
+    // 	// 	third_quan_level += std::to_string(v->id) + " "; 
+  	// 	// }
+    // idatoms << "C vars" <<std::endl;
+		// for (Atom* atom: program.c_var) {
+		// 	idatoms << std::to_string(atom->id) + " " << atom->name << std::endl;; 
+  	// 	}
+		// idatoms.close();
 		std::string weight_file = param.qcnfFileName;
 		weight_file=weight_file+".weights";
 		std::cout<<"Weights file: "<<weight_file<<std::endl;
@@ -2330,9 +2346,13 @@ Cmodels::print_DIMACS(){
 			//fprintf(file_q, "c p weight -%d %f\n", atomId, 1-weight);
 			//fprintf(file_q, "c p show %d\n", atomId);
 			weightD4<< atomId <<" "<< weight <<std::endl;
-			projD4<< atomId <<" ";
+			weightD4<< "-" << atomId <<" "<< (1-weight) <<std::endl;
+			projD4<< atomId <<std::endl;
 		}
 		projD4<< std::endl;
+		projD4.close();
+		weightD4.close();
+		infile.close();
 		fprintf(file_q,"%s%s",weights.c_str(),show.c_str());
 	  for(long indA=0; indA<program.clauses.size(); indA++){
 			program.clauses[indA]->printcnf(file_q);
