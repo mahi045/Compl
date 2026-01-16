@@ -2333,7 +2333,7 @@ Cmodels::print_DIMACS(){
 
     std::string atomname;
 		std::string weights="";
-		std::string show="";
+		std::string show="c p show ";
 		
     double weight;
 		while(infile >> atomname >> weight){
@@ -2341,7 +2341,7 @@ Cmodels::print_DIMACS(){
 			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomId<<std::endl;
 			weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
 			weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+" 0\n";
-			show+="c p show "+std::to_string(atomId)+" 0\n";
+			show+=std::to_string(atomId)+" ";
 			//fprintf(file_q, "c p weight %d %f\n", atomId, weight);
 			//fprintf(file_q, "c p weight -%d %f\n", atomId, 1-weight);
 			//fprintf(file_q, "c p show %d\n", atomId);
@@ -2353,6 +2353,7 @@ Cmodels::print_DIMACS(){
 		projD4.close();
 		weightD4.close();
 		infile.close();
+		show+="0\n";
 		fprintf(file_q,"%s%s",weights.c_str(),show.c_str());
 	  for(long indA=0; indA<program.clauses.size(); indA++){
 			program.clauses[indA]->printcnf(file_q);
