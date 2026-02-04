@@ -2338,6 +2338,8 @@ Cmodels::print_DIMACS(){
     double weight;
 		while(infile >> atomname >> weight){
 			int atomId=atomNameMap[atomname];
+			if (atomId)
+			{
 			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomId<<std::endl;
 			weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
 			weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+" 0\n";
@@ -2348,6 +2350,7 @@ Cmodels::print_DIMACS(){
 			weightD4<< atomId <<" "<< weight <<std::endl;
 			weightD4<< "-" << atomId <<" "<< (1-weight) <<std::endl;
 			projD4<< atomId <<std::endl;
+			}
 		}
 		projD4<< std::endl;
 		projD4.close();
