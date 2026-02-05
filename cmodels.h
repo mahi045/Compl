@@ -24,6 +24,7 @@
 #include "api.h"
 #include "interpret.h"
 #include <vector>
+#include <map>
 #include "MiniSat_v1.12b/Solver.h"
 
 using namespace std;

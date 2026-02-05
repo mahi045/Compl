@@ -206,7 +206,7 @@ Cmodels::Cmodels ()
   
   output.program = &program;
   output.param = &param;
-  atomNameMap=map<string, int>();  
+	atomNameMap=map<string,int>();
   satMngMinimality =0;
   zchaffMng =0;
 	
@@ -330,6 +330,11 @@ Cmodels::preprocessing(bool& emptyprogram)
     cout<<"First Program "<<endl;
 	  program.print();
   */
+	//   for(long indA=0; indA<program.number_of_atoms; indA++){
+  //   Atom* itrmm = program.atoms[indA];
+	// 	atomNameMap[std::string(itrmm->atom_name())] = itrmm;
+	// 	std::cout << "Atom " << indA << " "<< itrmm->atom_name() <<" id "<< itrmm->id<<" orig_id "<< itrmm->original_id << std::endl;
+	// }
   output.numRules=program.number_of_rules;
   sortRules();
 
@@ -444,10 +449,16 @@ Cmodels::preprocessing(bool& emptyprogram)
 		break;
 	}
   }
+
+
   for(long indA=0; indA<program.number_of_atoms_in_completion; indA++){
     Atom* itrmm = program.atoms[indA];
 		atomNameMap[std::string(itrmm->atom_name())] = itrmm->id;
-//		std::cout << "Atom " << indA << " "<< itrmm->atom_name() << std::endl;
+		//atomNameMap[std::string(itrmm->atom_name())] = itrmm->id;
+		//atomNameMap[std::string(itrmm->atom_name())] = indA+1;
+		std::cout << "Atom " << indA << " "<< itrmm->atom_name() <<" id "<< itrmm->id<<" orig_id "<< itrmm->original_id << std::endl;
+
+		//std::cout << "Atom " << indA << " "<< itrmm->atom_name() << std::endl;
 	if((itrmm)->inLoop!=-1){
 		nLoopAtoms += 1;
 		// creating two set of copy variables
@@ -2328,34 +2339,43 @@ Cmodels::print_DIMACS(){
 		weight_file_D4=weight_file_D4+".d4.weights";
 		std::string proj_file_D4=param.qcnfFileName;
 		proj_file_D4=proj_file_D4+".d4.projection";
+		std::string eliminated_weight_file=param.qcnfFileName;
+		eliminated_weight_file=eliminated_weight_file+".eliminated_weight";
 		std::ofstream weightD4(weight_file_D4);
 		std::ofstream projD4(proj_file_D4);
+		std::ofstream eliminated_weight(eliminated_weight_file);
 
     std::string atomname;
 		std::string weights="";
 		std::string show="c p show ";
+		double tot_eliminated_weight=1.0;
 		
     double weight;
 		while(infile >> atomname >> weight){
-			int atomId=atomNameMap[atomname];
-			if (atomId)
-			{
+			int atomId = atomNameMap[atomname];
 			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomId<<std::endl;
-			weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
-			weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+" 0\n";
-			show+=std::to_string(atomId)+" ";
-			//fprintf(file_q, "c p weight %d %f\n", atomId, weight);
-			//fprintf(file_q, "c p weight -%d %f\n", atomId, 1-weight);
-			//fprintf(file_q, "c p show %d\n", atomId);
-			weightD4<< atomId <<" "<< weight <<std::endl;
-			weightD4<< "-" << atomId <<" "<< (1-weight) <<std::endl;
-			projD4<< atomId <<std::endl;
+		  if(atomId>0)
+			{
+				weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
+				weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+" 0\n";
+				show+=std::to_string(atomId)+" ";
+				//fprintf(file_q, "c p weight %d %f\n", atomId, weight);
+				//fprintf(file_q, "c p weight -%d %f\n", atomId, 1-weight);
+				//fprintf(file_q, "c p show %d\n", atomId);
+				weightD4<< atomId <<" "<< weight <<std::endl;
+				weightD4<< "-" << atomId <<" "<< (1-weight) <<std::endl;
+				projD4<< atomId <<std::endl;
 			}
-		}
+			else
+				tot_eliminated_weight*=(1-weight);
+		
+	}
 		projD4<< std::endl;
 		projD4.close();
 		weightD4.close();
 		infile.close();
+		eliminated_weight<< tot_eliminated_weight << std::endl;
+		eliminated_weight.close();
 		show+="0\n";
 		fprintf(file_q,"%s%s",weights.c_str(),show.c_str());
 	  for(long indA=0; indA<program.clauses.size(); indA++){
