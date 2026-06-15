@@ -2360,14 +2360,18 @@ Cmodels::print_DIMACS(){
 			std::cout<<"Atomname: "<<atomname<<" weight: "<<weight<<" "<< atomId<<std::endl;
 		  if(atomId>0)
 			{
-				weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
 				if (param.pmc)
 				{
+				weights+="c p weight "+std::to_string(atomId)+" 1 0\n";
+
 				weights+="c p weight -"+std::to_string(atomId)+" 1 0\n";
 				std::cout<<"PMC mode: "<<std::to_string(atomId)<<std::endl;
 				}
 				else
+				{
+				weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
 				weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+" 0\n";
+				}
 				show+=std::to_string(atomId)+" ";
 				//fprintf(file_q, "c p weight %d %f\n", atomId, weight);
 				//fprintf(file_q, "c p weight -%d %f\n", atomId, 1-weight);
