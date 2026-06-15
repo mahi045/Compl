@@ -2345,11 +2345,9 @@ Cmodels::print_DIMACS(){
 		weight_file_D4=weight_file_D4+".d4.weights";
 		std::string proj_file_D4=param.qcnfFileName;
 		proj_file_D4=proj_file_D4+".d4.projection";
-		std::string eliminated_weight_file=param.qcnfFileName;
-		eliminated_weight_file=eliminated_weight_file+".eliminated_weight";
 		std::ofstream weightD4(weight_file_D4);
 		std::ofstream projD4(proj_file_D4);
-		std::ofstream eliminated_weight(eliminated_weight_file);
+
 
     std::string atomname;
 		std::string weights="";
@@ -2390,8 +2388,14 @@ Cmodels::print_DIMACS(){
 		projD4.close();
 		weightD4.close();
 		infile.close();
-		eliminated_weight<< tot_eliminated_weight << std::endl;
-		eliminated_weight.close();
+		if (!param.pmc)
+		{
+  		std::string eliminated_weight_file=param.qcnfFileName;
+	  	eliminated_weight_file=eliminated_weight_file+".eliminated_weight";
+	    std::ofstream eliminated_weight(eliminated_weight_file);
+  		eliminated_weight<< tot_eliminated_weight << std::endl;
+		  eliminated_weight.close();
+		}
 		show+="0\n";
 		fprintf(file_q,"%s%s",weights.c_str(),show.c_str());
 	  for(long indA=0; indA<program.clauses.size(); indA++){
