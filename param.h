@@ -22,6 +22,7 @@ class Param{
   char qcnfFileName[512];
   // char nonsmFileName[512];
   char solverOutputFileName[512];
+  bool pmc; //true if relsat is called to compute the projected number of models
   int many; 
   bool sort;
   SolverType sys; 

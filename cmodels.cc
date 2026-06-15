@@ -2301,6 +2301,12 @@ Cmodels::print_DIMACS(){
 	  program.print_atoms_dimac(file_q);
 		}
 		else
+		  if (param.pmc)
+		  {
+			  fprintf(file_q, "c t pmc\np cnf %d %d\n",program.number_of_atoms, program.number_of_clauses); 
+			  program.print_atoms_dimac(file_q);
+		  }
+		  else
 		{
 			  fprintf(file_q, "c t pwmc\np cnf %d %d\n",program.number_of_atoms, program.number_of_clauses); 
   		  program.print_atoms_dimac(file_q);
@@ -2357,16 +2363,26 @@ Cmodels::print_DIMACS(){
 		  if(atomId>0)
 			{
 				weights+="c p weight "+std::to_string(atomId)+" "+std::to_string(weight)+" 0\n";
+				if (param.pmc)
+				{
+				weights+="c p weight -"+std::to_string(atomId)+" 1 0\n";
+				std::cout<<"PMC mode: "<<std::to_string(atomId)<<std::endl;
+				}
+				else
 				weights+="c p weight -"+std::to_string(atomId)+" "+std::to_string(1-weight)+" 0\n";
 				show+=std::to_string(atomId)+" ";
 				//fprintf(file_q, "c p weight %d %f\n", atomId, weight);
 				//fprintf(file_q, "c p weight -%d %f\n", atomId, 1-weight);
 				//fprintf(file_q, "c p show %d\n", atomId);
 				weightD4<< atomId <<" "<< weight <<std::endl;
+				if (param.pmc)
+				weightD4<< "-" << atomId <<" 1" <<std::endl;
+				else
 				weightD4<< "-" << atomId <<" "<< (1-weight) <<std::endl;
 				projD4<< atomId <<std::endl;
 			}
 			else
+			  if (!param.pmc)
 				tot_eliminated_weight*=(1-weight);
 		
 	}

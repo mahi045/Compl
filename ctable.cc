@@ -110,6 +110,8 @@ Ctable::setSingleExecutionArgument(char *arg, char *option){
 	  strcpy(cmodels.param.dirName, &option[0]);
 	  ret=1;
 	}
+	else if (strcmp (&arg[1], "pmc") == 0)
+	  cmodels.param.pmc =  true;
 	else if (strcmp (&arg[1], "dimacs") == 0)
 	  cmodels.param.sys =  DIMACS_PRODUCE;
 	else if (strcmp (&arg[1], "cdimacs") == 0)
