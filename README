@@ -1,5 +1,7 @@
 Linux Instructions:
 
+On Copernico
+module load gcc/13.2.0-gcc-11.3.1-4pfh4cu
 To compile Cmodels at the prompt type
 1. % ./configure
 2. % make

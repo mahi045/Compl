@@ -1,15 +1,15 @@
 AR = /usr/bin/ar
-CC = gcc
+CC = /hpc/apps/spack/opt/spack/linux-rocky9-zen4/gcc-11.3.1/gcc-13.2.0-4pfh4cu5hybuks7v35skuctj3eipklqp/bin/gcc
 CPP = @CPP@
-CXX = g++
+CXX = /hpc/apps/spack/opt/spack/linux-rocky9-zen4/gcc-11.3.1/gcc-13.2.0-4pfh4cu5hybuks7v35skuctj3eipklqp/bin/g++
 CXXCPP = @CXXCPP@
 RANLIB = ranlib
 
 CPPFLAGS = 
 LDFLAGS = 
 LIBS = 
-CXXFLAGS = -g -O2 -static -fpermissive
-CFLAGS = -g -O2 -static -fpermissive
+CXXFLAGS = -g -O2 -fpermissive
+CFLAGS = -g -O2 -fpermissive
 
 #CC = CC
 #CC = g++ 
